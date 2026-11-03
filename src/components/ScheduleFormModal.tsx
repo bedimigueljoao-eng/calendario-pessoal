@@ -35,6 +35,8 @@ export const ScheduleFormModal: React.FC<Props> = ({
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('10:30');
   const [alarmEnabled, setAlarmEnabled] = useState(true);
+  const [alarmMinutesBefore, setAlarmMinutesBefore] = useState<number>(0);
+  const [alarmRepeat, setAlarmRepeat] = useState<boolean>(true);
   const [timerEnabled, setTimerEnabled] = useState(true);
   const [repeatWeekly, setRepeatWeekly] = useState(true);
 
@@ -51,6 +53,8 @@ export const ScheduleFormModal: React.FC<Props> = ({
       setStartTime(schedule.startTime);
       setEndTime(schedule.endTime);
       setAlarmEnabled(schedule.alarmEnabled);
+      setAlarmMinutesBefore(schedule.alarmMinutesBefore ?? 0);
+      setAlarmRepeat(schedule.alarmRepeat ?? true);
       setTimerEnabled(schedule.timerEnabled);
       setRepeatWeekly(schedule.repeatWeekly);
     } else {
@@ -59,6 +63,8 @@ export const ScheduleFormModal: React.FC<Props> = ({
       setStartTime('09:00');
       setEndTime('10:30');
       setAlarmEnabled(true);
+      setAlarmMinutesBefore(0);
+      setAlarmRepeat(true);
       setTimerEnabled(true);
       setRepeatWeekly(true);
     }
@@ -124,6 +130,8 @@ export const ScheduleFormModal: React.FC<Props> = ({
           startTime,
           endTime,
           alarmEnabled,
+          alarmMinutesBefore: Number(alarmMinutesBefore),
+          alarmRepeat,
           timerEnabled,
           repeatWeekly,
         });
@@ -134,6 +142,8 @@ export const ScheduleFormModal: React.FC<Props> = ({
           startTime,
           endTime,
           alarmEnabled,
+          alarmMinutesBefore: Number(alarmMinutesBefore),
+          alarmRepeat,
           timerEnabled,
           repeatWeekly,
         });
@@ -278,25 +288,60 @@ export const ScheduleFormModal: React.FC<Props> = ({
 
             {/* Configurações (Alarme, Cronómetro, Repetição) */}
             <div className="space-y-2.5 pt-1 border-t border-gray-100">
-              <label className="flex items-center justify-between p-2.5 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer">
-                <div className="flex items-center gap-2.5">
-                  <Bell className="w-4 h-4 text-amber-500" />
-                  <div>
-                    <span className="text-xs font-semibold text-gray-900 block">
-                      Activar Alarme
-                    </span>
-                    <span className="text-[11px] text-gray-500">
-                      Tocar som e emitir notificação no início
-                    </span>
+              <div className="rounded-xl border border-gray-200 p-2.5 space-y-2.5 bg-gray-50/50">
+                <label className="flex items-center justify-between cursor-pointer">
+                  <div className="flex items-center gap-2.5">
+                    <Bell className="w-4 h-4 text-amber-500" />
+                    <div>
+                      <span className="text-xs font-semibold text-gray-900 block">
+                        Activar Alarme
+                      </span>
+                      <span className="text-[11px] text-gray-500">
+                        Tocar som e emitir notificação no telemóvel
+                      </span>
+                    </div>
                   </div>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={alarmEnabled}
-                  onChange={(e) => setAlarmEnabled(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                />
-              </label>
+                  <input
+                    type="checkbox"
+                    checked={alarmEnabled}
+                    onChange={(e) => setAlarmEnabled(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                  />
+                </label>
+
+                {alarmEnabled && (
+                  <div className="pt-2 border-t border-gray-200/80 space-y-2.5">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+                        Momento do alerta (Antecedência):
+                      </label>
+                      <select
+                        value={alarmMinutesBefore}
+                        onChange={(e) => setAlarmMinutesBefore(Number(e.target.value))}
+                        className="w-full px-2.5 py-1.5 rounded-lg border border-gray-300 text-xs bg-white text-gray-800"
+                      >
+                        <option value={0}>Na hora de início (exato)</option>
+                        <option value={5}>5 minutos antes</option>
+                        <option value={10}>10 minutos antes</option>
+                        <option value={15}>15 minutos antes</option>
+                        <option value={30}>30 minutos antes</option>
+                      </select>
+                    </div>
+
+                    <label className="flex items-center gap-2 cursor-pointer pt-0.5">
+                      <input
+                        type="checkbox"
+                        checked={alarmRepeat}
+                        onChange={(e) => setAlarmRepeat(e.target.checked)}
+                        className="w-3.5 h-3.5 text-blue-600 rounded"
+                      />
+                      <span className="text-[11px] text-gray-600">
+                        Repetir lembrete sonoro após 5 min se ainda não iniciado
+                      </span>
+                    </label>
+                  </div>
+                )}
+              </div>
 
               <label className="flex items-center justify-between p-2.5 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer">
                 <div className="flex items-center gap-2.5">

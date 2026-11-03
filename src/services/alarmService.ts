@@ -1,6 +1,7 @@
 import { Schedule, Discipline } from '../types';
+import { timeToMinutes } from '../utils/dateUtils';
 
-type AlarmCallback = (schedule: Schedule, discipline: Discipline) => void;
+type AlarmCallback = (schedule: Schedule, discipline: Discipline, isAdvanceAlert: boolean) => void;
 
 class AlarmService {
   private firedAlarmsToday: Set<string> = new Set();
@@ -32,32 +33,52 @@ class AlarmService {
     return Notification.permission;
   }
 
-  // Play gentle bell chime via Web Audio API (works 100% offline and requires zero audio file downloads)
+  // Play rich alarm chime via Web Audio API + vibration on mobile
   playAlarmChime() {
+    // Vibrate device on Android if supported
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      try {
+        navigator.vibrate([400, 150, 400, 150, 600]);
+      } catch {
+        // ignore
+      }
+    }
+
     try {
-      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const AudioCtx =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       if (!AudioCtx) return;
       const ctx = new AudioCtx();
 
+      // Ensure audio context is running (unmuted)
+      if (ctx.state === 'suspended') {
+        ctx.resume();
+      }
+
       const now = ctx.currentTime;
-      // Primary chime tone 587.33 Hz (D5) and 880 Hz (A5)
-      const freqs = [587.33, 880, 1174.66];
-      freqs.forEach((freq, i) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
+      // High-clarity chime chord (E5, A5, C#6, E6)
+      const chord = [659.25, 880.0, 1108.73, 1318.51];
 
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, now + i * 0.12);
+      // Two pleasant rings: primary + echo
+      [0, 0.45].forEach((offset) => {
+        chord.forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
 
-        gain.gain.setValueAtTime(0, now + i * 0.12);
-        gain.gain.linearRampToValueAtTime(0.25, now + i * 0.12 + 0.04);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 1.2);
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now + offset + idx * 0.04);
 
-        osc.connect(gain);
-        gain.connect(ctx.destination);
+          gain.gain.setValueAtTime(0, now + offset + idx * 0.04);
+          gain.gain.linearRampToValueAtTime(0.3, now + offset + idx * 0.04 + 0.03);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + offset + idx * 0.04 + 0.9);
 
-        osc.start(now + i * 0.12);
-        osc.stop(now + i * 0.12 + 1.3);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+
+          osc.start(now + offset + idx * 0.04);
+          osc.stop(now + offset + idx * 0.04 + 1.0);
+        });
       });
     } catch (e) {
       console.warn('Audio chime could not be played:', e);
@@ -72,10 +93,12 @@ class AlarmService {
   }
 
   // Check schedules against current time
-  checkAlarms(schedules: Schedule[], disciplines: Discipline[]) {
+  checkAlarms(
+    schedules: Schedule[],
+    disciplines: Discipline[],
+    studiedScheduleIdsToday: Set<string> = new Set()
+  ) {
     const now = new Date();
-    // In JavaScript: Sunday = 0, Monday = 1, ... Saturday = 6
-    // In StudyTrack: Monday = 1, Tuesday = 2, ... Sunday = 7
     const jsDay = now.getDay();
     const currentDayOfWeek = jsDay === 0 ? 7 : jsDay;
 
@@ -85,60 +108,119 @@ class AlarmService {
       this.lastCheckedDay = currentDayOfWeek;
     }
 
-    const currentHours = String(now.getHours()).padStart(2, '0');
-    const currentMinutes = String(now.getMinutes()).padStart(2, '0');
-    const currentTimeStr = `${currentHours}:${currentMinutes}`;
+    const currentHours = now.getHours();
+    const currentMinutes = now.getMinutes();
+    const currentTotalMinutes = currentHours * 60 + currentMinutes;
+    const currentTimeStr = `${String(currentHours).padStart(2, '0')}:${String(currentMinutes).padStart(2, '0')}`;
     const todayDateStr = now.toISOString().split('T')[0];
 
-    const discMap = new Map(disciplines.map(d => [d.id, d]));
+    const discMap = new Map(disciplines.map((d) => [d.id, d]));
 
-    schedules.forEach(schedule => {
+    schedules.forEach((schedule) => {
       if (!schedule.alarmEnabled) return;
       if (schedule.dayOfWeek !== currentDayOfWeek) return;
 
-      const alarmKey = `${todayDateStr}_${schedule.id}_${schedule.startTime}`;
-      if (this.firedAlarmsToday.has(alarmKey)) return;
+      const discipline = discMap.get(schedule.disciplineId);
+      if (!discipline || discipline.archived) return;
 
-      if (schedule.startTime === currentTimeStr) {
-        this.firedAlarmsToday.add(alarmKey);
-        const discipline = discMap.get(schedule.disciplineId);
-        if (!discipline || discipline.archived) return;
+      // Skip if already marked studied today
+      if (studiedScheduleIdsToday.has(schedule.id)) return;
 
-        // Trigger alarm chime
-        this.playAlarmChime();
+      const scheduleStartTotalMins = timeToMinutes(schedule.startTime);
+      const minutesBefore = schedule.alarmMinutesBefore || 0;
 
-        // Trigger Web Notification if allowed
-        if ('Notification' in window && Notification.permission === 'granted') {
-          try {
-            navigator.serviceWorker?.ready.then(reg => {
-              reg.showNotification(`Está na hora de estudar ${discipline.name}!`, {
-                body: `Horário: ${schedule.startTime} - ${schedule.endTime}. Abra o StudyTrack para iniciar o cronómetro.`,
-                icon: '/pwa-192x192.png',
-                badge: '/icon.svg',
-                tag: alarmKey,
-              });
-            }).catch(() => {
-              new Notification(`Está na hora de estudar ${discipline.name}!`, {
-                body: `Horário: ${schedule.startTime} - ${schedule.endTime}`,
-                icon: '/pwa-192x192.png',
-              });
-            });
-          } catch (e) {
-            console.warn('Notification error:', e);
+      // 1. Advance Alert (if configured, e.g., 5, 10, 15, 30 min before)
+      if (minutesBefore > 0) {
+        const advanceTargetMins = scheduleStartTotalMins - minutesBefore;
+        if (advanceTargetMins === currentTotalMinutes) {
+          const advanceKey = `${todayDateStr}_${schedule.id}_advance_${minutesBefore}`;
+          if (!this.firedAlarmsToday.has(advanceKey)) {
+            this.firedAlarmsToday.add(advanceKey);
+            this.triggerAlert(
+              schedule,
+              discipline,
+              true,
+              `Lembrete: Estudo de ${discipline.name} começa em ${minutesBefore} minutos! (${schedule.startTime} - ${schedule.endTime})`
+            );
           }
         }
+      }
 
-        // Notify in-app listeners
-        this.listeners.forEach(cb => cb(schedule, discipline));
+      // 2. Exact On-Time Alert (at startTime)
+      if (schedule.startTime === currentTimeStr) {
+        const onTimeKey = `${todayDateStr}_${schedule.id}_ontime`;
+        if (!this.firedAlarmsToday.has(onTimeKey)) {
+          this.firedAlarmsToday.add(onTimeKey);
+          this.triggerAlert(
+            schedule,
+            discipline,
+            false,
+            `Está na hora de estudar ${discipline.name}! (${schedule.startTime} - ${schedule.endTime})`
+          );
+        }
+      }
+
+      // 3. Repeat Alert (if alarmRepeat is true, repeat 5 minutes after startTime if still not studied)
+      if (schedule.alarmRepeat) {
+        const repeatTargetMins = scheduleStartTotalMins + 5;
+        if (repeatTargetMins === currentTotalMinutes) {
+          const repeatKey = `${todayDateStr}_${schedule.id}_repeat_5`;
+          if (!this.firedAlarmsToday.has(repeatKey)) {
+            this.firedAlarmsToday.add(repeatKey);
+            this.triggerAlert(
+              schedule,
+              discipline,
+              false,
+              `Segundo aviso: Ainda não iniciou ${discipline.name}! (${schedule.startTime} - ${schedule.endTime})`
+            );
+          }
+        }
       }
     });
   }
 
+  private triggerAlert(
+    schedule: Schedule,
+    discipline: Discipline,
+    isAdvance: boolean,
+    message: string
+  ) {
+    // 1. Audio and Vibration
+    this.playAlarmChime();
+
+    // 2. Web Notification
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+      try {
+        const options: NotificationOptions = {
+          body: message,
+          icon: '/pwa-192x192.png',
+          badge: '/icon.svg',
+          tag: `studytrack_alarm_${schedule.id}`,
+          requireInteraction: true,
+        };
+
+        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+          navigator.serviceWorker.ready.then((reg) => {
+            reg.showNotification(`StudyTrack: ${discipline.name}`, options);
+          }).catch(() => {
+            new Notification(`StudyTrack: ${discipline.name}`, options);
+          });
+        } else {
+          new Notification(`StudyTrack: ${discipline.name}`, options);
+        }
+      } catch (e) {
+        console.warn('Notification trigger error:', e);
+      }
+    }
+
+    // 3. In-App Listeners (banner & modals)
+    this.listeners.forEach((cb) => cb(schedule, discipline, isAdvance));
+  }
+
   private startScheduleChecker() {
     if (this.checkInterval) return;
-    // Check every 10 seconds
     this.checkInterval = window.setInterval(() => {
-      // Periodic check tick triggered by react state consumer
+      // Checked reactively via StudyContext
     }, 10000);
   }
 }

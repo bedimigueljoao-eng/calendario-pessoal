@@ -20,6 +20,8 @@ export const Header: React.FC = () => {
     setIsTimerModalOpen,
     setIsManualModalOpen,
     setIsAndroidNoticeOpen,
+    isAndroidSetupOpen,
+    setIsAndroidSetupOpen,
     notificationPermission,
     requestNotificationAccess,
     disciplines,
@@ -104,9 +106,9 @@ export const Header: React.FC = () => {
             <Info className="w-4 h-4" />
           </button>
 
-          {/* Notification access */}
+          {/* Notification / Alarm setup */}
           <button
-            onClick={requestNotificationAccess}
+            onClick={() => setIsAndroidSetupOpen(true)}
             className={`p-2 rounded-lg transition ${
               notificationPermission === 'granted'
                 ? 'text-emerald-400 hover:bg-white/10'
@@ -114,8 +116,8 @@ export const Header: React.FC = () => {
             }`}
             title={
               notificationPermission === 'granted'
-                ? 'Notificações ativadas'
-                : 'Ativar notificações de alarme'
+                ? 'Notificações ativadas — Toque para configurar'
+                : 'Ativar notificações de alarme e instalar'
             }
           >
             {notificationPermission === 'granted' ? (

@@ -14,6 +14,8 @@ export interface Schedule {
   startTime: string; // "HH:MM"
   endTime: string;   // "HH:MM"
   alarmEnabled: boolean;
+  alarmMinutesBefore?: number; // 0 = Na hora, 5 = 5 min antes, 10 = 10 min antes, 15 = 15 min antes, 30 = 30 min antes
+  alarmRepeat?: boolean; // Repetir alarme caso não seja atendido
   timerEnabled: boolean;
   repeatWeekly: boolean;
   createdAt: string;

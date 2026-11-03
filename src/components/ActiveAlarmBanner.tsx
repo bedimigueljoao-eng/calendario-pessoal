@@ -7,7 +7,7 @@ export const ActiveAlarmBanner: React.FC = () => {
 
   if (!activeAlarm) return null;
 
-  const { schedule, discipline } = activeAlarm;
+  const { schedule, discipline, isAdvanceAlert } = activeAlarm;
 
   const handleStartStudy = () => {
     startTimer(discipline.id, schedule.id);
@@ -24,14 +24,16 @@ export const ActiveAlarmBanner: React.FC = () => {
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs uppercase font-bold text-amber-400 tracking-wider">
-                Alarme de Estudo
+                {isAdvanceAlert ? 'Lembrete Antecipado' : 'Alarme de Estudo'}
               </span>
               <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full font-mono">
                 {schedule.startTime} - {schedule.endTime}
               </span>
             </div>
             <h4 className="text-base font-bold text-white mt-0.5">
-              Está na hora de estudar {discipline.name}!
+              {isAdvanceAlert
+                ? `Estudo de ${discipline.name} começa em breve!`
+                : `Está na hora de estudar ${discipline.name}!`}
             </h4>
           </div>
         </div>

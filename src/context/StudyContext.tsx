@@ -28,6 +28,7 @@ interface ToastData {
 interface ActiveAlarmData {
   schedule: Schedule;
   discipline: Discipline;
+  isAdvanceAlert?: boolean;
 }
 
 interface StudyContextType {
@@ -90,6 +91,8 @@ interface StudyContextType {
   setIsManualModalOpen: (open: boolean) => void;
   isAndroidNoticeOpen: boolean;
   setIsAndroidNoticeOpen: (open: boolean) => void;
+  isAndroidSetupOpen: boolean;
+  setIsAndroidSetupOpen: (open: boolean) => void;
 
   // Alarm & Notifications
   activeAlarm: ActiveAlarmData | null;
@@ -121,6 +124,13 @@ export const StudyProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [isTimerModalOpen, setIsTimerModalOpen] = useState(false);
   const [isManualModalOpen, setIsManualModalOpen] = useState(false);
   const [isAndroidNoticeOpen, setIsAndroidNoticeOpen] = useState(false);
+  const [isAndroidSetupOpen, setIsAndroidSetupOpen] = useState(() => {
+    try {
+      return localStorage.getItem('studytrack_setup_done') !== 'true';
+    } catch {
+      return false;
+    }
+  });
   const [toast, setToast] = useState<ToastData | null>(null);
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>(() =>
     alarmService.getPermissionStatus()
@@ -171,22 +181,28 @@ export const StudyProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Alarm listener and periodic check
   useEffect(() => {
-    const unsubscribe = alarmService.subscribe((schedule, discipline) => {
-      setActiveAlarm({ schedule, discipline });
+    const unsubscribe = alarmService.subscribe((schedule, discipline, isAdvanceAlert) => {
+      setActiveAlarm({ schedule, discipline, isAdvanceAlert });
     });
 
-    const interval = setInterval(() => {
-      alarmService.checkAlarms(schedules, disciplines);
-    }, 10000);
+    const runAlarmCheck = () => {
+      const todayStr = toDateString(new Date());
+      const studiedIds = new Set(
+        scheduleOccurrences
+          .filter((o) => o.date === todayStr && o.status === 'studied')
+          .map((o) => o.scheduleId)
+      );
+      alarmService.checkAlarms(schedules, disciplines, studiedIds);
+    };
 
-    // Initial check
-    alarmService.checkAlarms(schedules, disciplines);
+    const interval = setInterval(runAlarmCheck, 10000);
+    runAlarmCheck();
 
     return () => {
       unsubscribe();
       clearInterval(interval);
     };
-  }, [schedules, disciplines]);
+  }, [schedules, disciplines, scheduleOccurrences]);
 
   // Request notifications
   const requestNotificationAccess = async () => {
@@ -593,6 +609,8 @@ export const StudyProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setIsManualModalOpen,
         isAndroidNoticeOpen,
         setIsAndroidNoticeOpen,
+        isAndroidSetupOpen,
+        setIsAndroidSetupOpen,
 
         activeAlarm,
         dismissActiveAlarm,

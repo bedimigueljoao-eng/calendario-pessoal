@@ -8,6 +8,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { TimerModal } from './components/TimerModal';
 import { ManualSessionModal } from './components/ManualSessionModal';
 import { AndroidAlarmNoticeModal } from './components/AndroidAlarmNoticeModal';
+import { AndroidSetupModal } from './components/AndroidSetupModal';
 import { ActiveAlarmBanner } from './components/ActiveAlarmBanner';
 import { Toast } from './components/Toast';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
@@ -19,6 +20,8 @@ const MainContent: React.FC = () => {
     isLoading,
     isAndroidNoticeOpen,
     setIsAndroidNoticeOpen,
+    isAndroidSetupOpen,
+    setIsAndroidSetupOpen,
   } = useStudy();
   const isOnline = useOnlineStatus();
 
@@ -54,6 +57,10 @@ const MainContent: React.FC = () => {
       <AndroidAlarmNoticeModal
         isOpen={isAndroidNoticeOpen}
         onClose={() => setIsAndroidNoticeOpen(false)}
+      />
+      <AndroidSetupModal
+        isOpen={isAndroidSetupOpen}
+        onClose={() => setIsAndroidSetupOpen(false)}
       />
 
       {/* Toast Notifications */}
