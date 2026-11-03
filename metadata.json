@@ -1,0 +1,6 @@
+{
+  "name": "StudyTrack",
+  "description": "Aplicação pessoal de gestão, planeamento semanal e acompanhamento de estudos.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#142B4A" />
+      <stop offset="100%" stop-color="#1E3A8A" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)" />
+  <circle cx="256" cy="256" r="150" fill="#2563EB" opacity="0.9" filter="url(#shadow)" />
+  <!-- Book and graduation cap icon -->
+  <g transform="translate(136, 140) scale(0.94)" fill="none" stroke="#FFFFFF" stroke-width="18" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Open Book Pages -->
+    <path d="M 128 70 C 80 50, 20 60, 20 80 L 20 200 C 20 180, 80 170, 128 190 C 176 170, 236 180, 236 200 L 236 80 C 236 60, 176 50, 128 70 Z" fill="#FFFFFF" fill-opacity="0.95" />
+    <line x1="128" y1="70" x2="128" y2="190" stroke="#142B4A" stroke-width="12" />
+    <!-- Bookmark Ribbon -->
+    <path d="M 160 55 L 160 115 L 175 100 L 190 115 L 190 55" fill="#16A34A" stroke="#16A34A" stroke-width="4" />
+  </g>
+</svg>
