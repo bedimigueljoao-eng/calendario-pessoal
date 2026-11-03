@@ -28,13 +28,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
 
-      - name: Instalar dependências npm
-        run: npm install
+      - name: Configurar Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
 
-      - name: Compilar frontend Vite
-        run: npm run build
+      - name: Instalar dependências
+        run: bun install --frozen-lockfile
+
+      - name: Compilar aplicação web
+        run: bun run build
 
       - name: Sincronizar Capacitor com Android
         run: npx cap sync android
