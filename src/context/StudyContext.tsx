@@ -16,6 +16,7 @@ import {
 } from '../types';
 import { dbService } from '../database/db';
 import { alarmService } from '../services/alarmService';
+import { nativeAlarmBridge } from '../services/nativeAlarmBridge';
 import { getMondayOfWeek, toDateString } from '../utils/dateUtils';
 import confetti from 'canvas-confetti';
 
@@ -209,6 +210,13 @@ export const StudyProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
   }, [schedules, disciplines, scheduleOccurrences]);
 
+  // Sync schedules with native Android AlarmManager whenever schedules or disciplines update
+  useEffect(() => {
+    if (schedules.length > 0 && disciplines.length > 0) {
+      nativeAlarmBridge.syncAllSchedules(schedules, disciplines);
+    }
+  }, [schedules, disciplines]);
+
   // Request notifications
   const requestNotificationAccess = async () => {
     const perm = await alarmService.requestNotificationPermission();
@@ -223,6 +231,7 @@ export const StudyProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const isAlarmRinging = activeAlarm !== null;
 
   const dismissActiveAlarm = () => {
+    nativeAlarmBridge.stopActiveAlarm();
     alarmService.stopContinuousAlarm();
     setActiveAlarm(null);
   };
@@ -230,6 +239,7 @@ export const StudyProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const handleAlarmStudy = async () => {
     if (!activeAlarm) return;
     const { schedule, discipline } = activeAlarm;
+    nativeAlarmBridge.stopActiveAlarm();
     alarmService.stopContinuousAlarm();
     setActiveAlarm(null);
     await startTimer(discipline.id, schedule.id);
@@ -240,6 +250,7 @@ export const StudyProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const handleAlarmSnooze = (minutes: number) => {
     if (!activeAlarm) return;
     const { schedule, discipline } = activeAlarm;
+    nativeAlarmBridge.stopActiveAlarm();
     alarmService.snoozeCurrentAlarm(schedule, discipline, minutes);
     setActiveAlarm(null);
     showToast(`Alarme de ${discipline.name} adiado por ${minutes} minutos.`, 'info');
@@ -248,6 +259,7 @@ export const StudyProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const handleAlarmSkip = async (reason?: string) => {
     if (!activeAlarm) return;
     const { schedule, discipline } = activeAlarm;
+    nativeAlarmBridge.stopActiveAlarm();
     alarmService.stopContinuousAlarm();
     const todayStr = toDateString(new Date());
     await markOccurrenceAsNotStudied(schedule.id, todayStr, reason);
@@ -601,6 +613,34 @@ export const StudyProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       isSavingSessionRef.current = false;
     }
   };
+
+  // Handle deep-link event triggered from native AlarmActivity when user taps 'Estudar'
+  useEffect(() => {
+    const handleNativeStudyAction = async (e: Event) => {
+      const customEvent = e as CustomEvent<{
+        scheduleId?: string;
+        disciplineId?: string;
+        disciplineName?: string;
+      }>;
+      const detail = customEvent.detail;
+      if (!detail) return;
+
+      nativeAlarmBridge.stopActiveAlarm();
+      alarmService.stopContinuousAlarm();
+      setActiveAlarm(null);
+
+      if (detail.disciplineId) {
+        await startTimer(detail.disciplineId, detail.scheduleId || null);
+        setIsTimerModalOpen(true);
+        showToast(`Sessão de ${detail.disciplineName || 'estudo'} iniciada!`);
+      }
+    };
+
+    window.addEventListener('studytrack_open_study', handleNativeStudyAction);
+    return () => {
+      window.removeEventListener('studytrack_open_study', handleNativeStudyAction);
+    };
+  }, []);
 
   return (
     <StudyContext.Provider

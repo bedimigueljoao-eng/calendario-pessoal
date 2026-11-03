@@ -1,0 +1,11 @@
+{
+	"appId": "com.studytrack.app",
+	"appName": "StudyTrack",
+	"webDir": "dist",
+	"bundledWebRuntime": false,
+	"server": {
+		"androidScheme": "https",
+		"cleartext": true
+	},
+	"android": {}
+}

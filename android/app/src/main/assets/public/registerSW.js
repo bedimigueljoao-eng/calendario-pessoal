@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/calendario-pessoal/sw.js', { scope: '/calendario-pessoal/' })})}
