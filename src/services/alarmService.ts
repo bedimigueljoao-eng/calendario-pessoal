@@ -191,10 +191,12 @@ class AlarmService {
     // 2. Web Notification
     if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
       try {
+        const baseUrl = import.meta.env.BASE_URL || '/';
+        const cleanBase = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
         const options: NotificationOptions = {
           body: message,
-          icon: '/pwa-192x192.png',
-          badge: '/icon.svg',
+          icon: `${cleanBase}pwa-192x192.png`,
+          badge: `${cleanBase}icon.svg`,
           tag: `studytrack_alarm_${schedule.id}`,
           requireInteraction: true,
         };

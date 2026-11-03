@@ -6,37 +6,39 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig(() => {
   return {
+    base: '/calendario-pessoal/',
     plugins: [
       react(),
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
+        injectRegister: 'auto',
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'icon.svg'],
         manifest: {
-          id: '/',
+          id: '/calendario-pessoal/',
           name: 'StudyTrack',
           short_name: 'StudyTrack',
           description: 'Aplicação pessoal de gestão, planeamento semanal e acompanhamento de estudos.',
           theme_color: '#142B4A',
           background_color: '#F3F5F8',
           display: 'standalone',
-          start_url: '/',
-          scope: '/',
+          start_url: '/calendario-pessoal/',
+          scope: '/calendario-pessoal/',
           icons: [
             {
-              src: '/pwa-192x192.png',
+              src: '/calendario-pessoal/pwa-192x192.png',
               sizes: '192x192',
               type: 'image/png',
               purpose: 'any',
             },
             {
-              src: '/pwa-512x512.png',
+              src: '/calendario-pessoal/pwa-512x512.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'any',
             },
             {
-              src: '/pwa-maskable-512x512.png',
+              src: '/calendario-pessoal/pwa-maskable-512x512.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'maskable',
@@ -54,7 +56,7 @@ export default defineConfig(() => {
     ],
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
+        '@': path.resolve(import.meta.dirname, '.'),
       },
     },
     server: {
