@@ -29,6 +29,7 @@ interface ActiveAlarmData {
   schedule: Schedule;
   discipline: Discipline;
   isAdvanceAlert?: boolean;
+  isSnoozed?: boolean;
 }
 
 interface StudyContextType {
@@ -64,7 +65,7 @@ interface StudyContextType {
     minutes: number,
     notes?: string
   ) => Promise<void>;
-  markOccurrenceAsNotStudied: (scheduleId: string, date: string) => Promise<void>;
+  markOccurrenceAsNotStudied: (scheduleId: string, date: string, reason?: string) => Promise<void>;
   markOccurrenceAsPending: (scheduleId: string, date: string) => Promise<void>;
 
   // Sessions
@@ -94,8 +95,12 @@ interface StudyContextType {
   isAndroidSetupOpen: boolean;
   setIsAndroidSetupOpen: (open: boolean) => void;
 
-  // Alarm & Notifications
+  // Alarm & Actions
   activeAlarm: ActiveAlarmData | null;
+  isAlarmRinging: boolean;
+  handleAlarmStudy: () => Promise<void>;
+  handleAlarmSnooze: (minutes: number) => void;
+  handleAlarmSkip: (reason?: string) => Promise<void>;
   dismissActiveAlarm: () => void;
   notificationPermission: NotificationPermission;
   requestNotificationAccess: () => Promise<void>;
@@ -181,8 +186,8 @@ export const StudyProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Alarm listener and periodic check
   useEffect(() => {
-    const unsubscribe = alarmService.subscribe((schedule, discipline, isAdvanceAlert) => {
-      setActiveAlarm({ schedule, discipline, isAdvanceAlert });
+    const unsubscribe = alarmService.subscribe((schedule, discipline, isAdvanceAlert, isSnoozed) => {
+      setActiveAlarm({ schedule, discipline, isAdvanceAlert, isSnoozed });
     });
 
     const runAlarmCheck = () => {
@@ -195,7 +200,7 @@ export const StudyProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       alarmService.checkAlarms(schedules, disciplines, studiedIds);
     };
 
-    const interval = setInterval(runAlarmCheck, 10000);
+    const interval = setInterval(runAlarmCheck, 5000);
     runAlarmCheck();
 
     return () => {
@@ -215,8 +220,39 @@ export const StudyProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  const isAlarmRinging = activeAlarm !== null;
+
   const dismissActiveAlarm = () => {
+    alarmService.stopContinuousAlarm();
     setActiveAlarm(null);
+  };
+
+  const handleAlarmStudy = async () => {
+    if (!activeAlarm) return;
+    const { schedule, discipline } = activeAlarm;
+    alarmService.stopContinuousAlarm();
+    setActiveAlarm(null);
+    await startTimer(discipline.id, schedule.id);
+    setIsTimerModalOpen(true);
+    showToast(`Sessão de ${discipline.name} iniciada! Bons estudos.`);
+  };
+
+  const handleAlarmSnooze = (minutes: number) => {
+    if (!activeAlarm) return;
+    const { schedule, discipline } = activeAlarm;
+    alarmService.snoozeCurrentAlarm(schedule, discipline, minutes);
+    setActiveAlarm(null);
+    showToast(`Alarme de ${discipline.name} adiado por ${minutes} minutos.`, 'info');
+  };
+
+  const handleAlarmSkip = async (reason?: string) => {
+    if (!activeAlarm) return;
+    const { schedule, discipline } = activeAlarm;
+    alarmService.stopContinuousAlarm();
+    const todayStr = toDateString(new Date());
+    await markOccurrenceAsNotStudied(schedule.id, todayStr, reason);
+    setActiveAlarm(null);
+    showToast(`Sessão de ${discipline.name} registada como não realizada.`, 'warning');
   };
 
   // Timer live ticker
@@ -378,7 +414,7 @@ export const StudyProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
-  const markOccurrenceAsNotStudied = async (scheduleId: string, date: string) => {
+  const markOccurrenceAsNotStudied = async (scheduleId: string, date: string, reason?: string) => {
     const occId = `${scheduleId}_${date}`;
     const occurrence: ScheduleOccurrence = {
       id: occId,
@@ -386,10 +422,11 @@ export const StudyProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       date,
       status: 'not_studied',
       completedAt: null,
+      reason: reason?.trim() || undefined,
     };
     await dbService.saveScheduleOccurrence(occurrence);
     setScheduleOccurrences(prev => [...prev.filter(o => o.id !== occId), occurrence]);
-    showToast('Programação marcada como não estudada.');
+    showToast('Programação marcada como não realizada.');
   };
 
   const markOccurrenceAsPending = async (scheduleId: string, date: string) => {
@@ -613,6 +650,10 @@ export const StudyProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setIsAndroidSetupOpen,
 
         activeAlarm,
+        isAlarmRinging,
+        handleAlarmStudy,
+        handleAlarmSnooze,
+        handleAlarmSkip,
         dismissActiveAlarm,
         notificationPermission,
         requestNotificationAccess,

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { usePWAInstall } from '../hooks/usePWAInstall';
+import { useStudy } from '../context/StudyContext';
 import { alarmService } from '../services/alarmService';
 import {
   Bell,
@@ -10,6 +11,7 @@ import {
   X,
   Sparkles,
   ShieldCheck,
+  AlarmClock,
 } from 'lucide-react';
 
 interface Props {
@@ -19,6 +21,7 @@ interface Props {
 
 export const AndroidSetupModal: React.FC<Props> = ({ isOpen, onClose }) => {
   const { isInstallable, isInstalled, isIOS, install } = usePWAInstall();
+  const { disciplines, schedules } = useStudy();
   const [notificationStatus, setNotificationStatus] = useState<NotificationPermission>(() =>
     alarmService.getPermissionStatus()
   );
@@ -41,6 +44,32 @@ export const AndroidSetupModal: React.FC<Props> = ({ isOpen, onClose }) => {
   const handleTestSound = () => {
     alarmService.playAlarmChime();
     setSoundTested(true);
+  };
+
+  const handleTestContinuousAlarm = () => {
+    const disc = disciplines[0] || {
+      id: 'test_disc',
+      name: 'Excel e Análise de Dados',
+      color: '#0284c7',
+      weeklyGoalMinutes: 120,
+      createdAt: new Date().toISOString(),
+      archived: false,
+    };
+    const sched = schedules[0] || {
+      id: 'test_sched',
+      disciplineId: disc.id,
+      dayOfWeek: 1,
+      startTime: '19:00',
+      endTime: '20:30',
+      alarmEnabled: true,
+      alarmMinutesBefore: 0,
+      alarmRepeat: true,
+      timerEnabled: true,
+      repeatWeekly: true,
+      createdAt: new Date().toISOString(),
+    };
+    alarmService.startContinuousAlarm(sched, disc, false);
+    onClose();
   };
 
   const handleFinish = () => {
@@ -141,18 +170,30 @@ export const AndroidSetupModal: React.FC<Props> = ({ isOpen, onClose }) => {
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={handleTestSound}
-                className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-xs flex items-center gap-1.5 active:scale-95"
-              >
-                <Volume2 className="w-3.5 h-3.5" />
-                <span>Tocar</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleTestSound}
+                  className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-xs flex items-center gap-1.5 active:scale-95"
+                  title="Tocar som de teste curto"
+                >
+                  <Volume2 className="w-3.5 h-3.5" />
+                  <span>Chime</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleTestContinuousAlarm}
+                  className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition shadow-xs flex items-center gap-1.5 active:scale-95"
+                  title="Abrir ecrã de despertador em ecrã completo com alarme contínuo"
+                >
+                  <AlarmClock className="w-3.5 h-3.5" />
+                  <span>Ecrã Alarme</span>
+                </button>
+              </div>
             </div>
             {soundTested && (
               <p className="text-[11px] text-blue-700 font-medium mt-2">
-                Som reproduzido! Certifique-se de que o modo silencioso/não perturbar não bloqueia o áudio.
+                Som reproduzido! Também pode carregar em "Ecrã Alarme" para simular o despertador de ecrã inteiro.
               </p>
             )}
           </div>

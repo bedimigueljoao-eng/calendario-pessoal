@@ -40,6 +40,7 @@ export interface ScheduleOccurrence {
   date: string; // YYYY-MM-DD
   status: 'pending' | 'studied' | 'not_studied';
   completedAt: string | null;
+  reason?: string;
 }
 
 export interface TimerState {

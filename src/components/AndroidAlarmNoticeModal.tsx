@@ -31,38 +31,46 @@ export const AndroidAlarmNoticeModal: React.FC<Props> = ({ isOpen, onClose }) =>
         </div>
 
         <div className="mt-4 space-y-4 text-sm text-gray-600">
-          <div className="p-3.5 bg-blue-50 border border-blue-200 rounded-xl text-blue-900">
-            <h4 className="font-semibold text-xs uppercase tracking-wider text-blue-700 flex items-center gap-1.5 mb-1">
-              <CheckCircle2 className="w-4 h-4 text-blue-600" />
-              Como funciona nesta versão PWA
+          <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-950">
+            <h4 className="font-semibold text-xs uppercase tracking-wider text-emerald-800 flex items-center gap-1.5 mb-1">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              Novo Sistema de Alarme Contínuo Implementado
             </h4>
-            <p className="text-xs leading-relaxed text-blue-800">
-              O StudyTrack reproduz alarmes sonoros suaves (chime sintetizado via Web Audio) e emite notificações do sistema quando a aba está aberta ou ativa em segundo plano no navegador.
+            <p className="text-xs leading-relaxed text-emerald-900 mb-2">
+              O alarme agora toca e vibra em loop contínuo sem parar sozinho. Apresenta um ecrã completo de despertador com 3 ações obrigatórias:
             </p>
+            <ul className="text-xs space-y-1 list-disc list-inside text-emerald-800">
+              <li><strong>Estudar Agora:</strong> Interrompe o som e inicia o cronómetro da disciplina.</li>
+              <li><strong>Adiar:</strong> Pausa o som e permite escolher 5, 10, 15 ou 30 minutos de snooze.</li>
+              <li><strong>Não estudar:</strong> Interrompe o som, permite indicar o motivo e arquiva no histórico.</li>
+            </ul>
           </div>
 
           <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-900">
             <h4 className="font-semibold text-xs uppercase tracking-wider text-amber-700 flex items-center gap-1.5 mb-1">
               <AlertTriangle className="w-4 h-4 text-amber-600" />
-              Limitação técnica do ecossistema Android PWA
+              Comportamento com o telemóvel bloqueado (PWA vs APK Nativa)
             </h4>
+            <p className="text-xs leading-relaxed text-amber-800 mb-2">
+              Na versão PWA, a API <em>Screen Wake Lock</em> mantém o ecrã aceso enquanto o alarme toca. Se o telemóvel estiver aberto ou em segundo plano recente, as notificações e sons são acionados.
+            </p>
             <p className="text-xs leading-relaxed text-amber-800">
-              O sistema operativo Android suspende temporizadores de navegadores quando o telemóvel está bloqueado ou a poupar bateria. Por isso, navegadores web não conseguem garantir toques com precisão de segundo se o ecrã estiver desligado há muito tempo.
+              No entanto, o Android activa o <strong>Doze Mode</strong> quando o telemóvel fica bloqueado por muito tempo sem uso, suspendendo temporizadores web do Chrome.
             </p>
           </div>
 
           <div className="p-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-800">
             <h4 className="font-semibold text-xs uppercase tracking-wider text-gray-700 flex items-center gap-1.5 mb-1">
               <Cpu className="w-4 h-4 text-gray-600" />
-              Arquitetura preparada para Android Nativo (Kotlin)
+              Garantia Absoluta a 100%: APK Nativo Android (Kotlin / TWA)
             </h4>
             <p className="text-xs leading-relaxed text-gray-600 mb-2">
-              A arquitetura de dados (IndexedDB/Room) e modelos (Discipline, Schedule, StudySession) foi desenhada para espelhar uma app Android nativa.
+              Para despertar o telemóvel mesmo com o ecrã desligado há horas e app totalmente encerrada pelo sistema, é necessária uma APK com:
             </p>
             <ul className="text-xs space-y-1 list-disc list-inside text-gray-600">
-              <li>Uso do <strong>AlarmManager.setExactAndAllowWhileIdle()</strong></li>
-              <li>Permissão <strong>SCHEDULE_EXACT_ALARM</strong></li>
-              <li>BroadcastReceiver para <strong>BOOT_COMPLETED</strong> (reagendar após reiniciar)</li>
+              <li><code>AlarmManager.setExactAndAllowWhileIdle()</code></li>
+              <li>Permissões <code>SCHEDULE_EXACT_ALARM</code> e <code>USE_FULL_SCREEN_INTENT</code></li>
+              <li>BroadcastReceiver para <code>BOOT_COMPLETED</code> para reagendar ao ligar o telemóvel</li>
             </ul>
           </div>
         </div>

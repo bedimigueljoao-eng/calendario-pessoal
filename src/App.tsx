@@ -9,7 +9,7 @@ import { TimerModal } from './components/TimerModal';
 import { ManualSessionModal } from './components/ManualSessionModal';
 import { AndroidAlarmNoticeModal } from './components/AndroidAlarmNoticeModal';
 import { AndroidSetupModal } from './components/AndroidSetupModal';
-import { ActiveAlarmBanner } from './components/ActiveAlarmBanner';
+import { FullscreenAlarmModal } from './components/FullscreenAlarmModal';
 import { Toast } from './components/Toast';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
 import { WifiOff, Loader2 } from 'lucide-react';
@@ -41,8 +41,8 @@ const MainContent: React.FC = () => {
       {/* Top Header */}
       <Header />
 
-      {/* Alarm popup banner if any alarm triggered */}
-      <ActiveAlarmBanner />
+      {/* Fullscreen Alarm Clock Modal when alarm rings */}
+      <FullscreenAlarmModal />
 
       {/* Main Pages */}
       <main className="flex-1 w-full max-w-6xl mx-auto">
