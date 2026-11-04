@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- Base application theme. -->
+    <!-- Base application theme -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
@@ -25,7 +25,6 @@
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:statusBarColor">#142B4A</item>
         <item name="android:navigationBarColor">#0F1F35</item>
-        <item name="android:windowKeepScreenOn">true</item>
         <item name="android:windowBackground">@color/alarmBackground</item>
     </style>
 
