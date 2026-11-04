@@ -46,14 +46,21 @@ jobs:
       - name: Instalar dependências
         run: bun install --frozen-lockfile
 
-      - name: Compilar aplicação web
-        run: bun run build
+      - name: Compilar aplicação para Android
+        run: bun run build -- --mode android
 
-      - name: Validar compilação web
-        run: |
-          test -d dist
-          test -f dist/index.html
-          ls -la dist
+  - name: Validar compilação Android
+  run: |
+    test -d dist
+    test -f dist/index.html
+    grep -q 'src="./assets/' dist/index.html
+    grep -q 'href="./assets/' dist/index.html
+    if grep -q '/calendario-pessoal/assets/' dist/index.html; then
+      echo "Erro: o build Android ainda contém caminhos do GitHub Pages."
+      exit 1
+    fi
+    echo "Build Android validado com caminhos relativos."
+    ls -la dist
 
       - name: Sincronizar Capacitor com Android
         run: bunx cap sync android
