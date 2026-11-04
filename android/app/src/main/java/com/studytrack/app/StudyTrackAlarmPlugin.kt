@@ -233,8 +233,8 @@ class StudyTrackAlarmPlugin : Plugin() {
         call.resolve(res)
     }
 
-    @PluginMethod
-    fun checkPermissions(call: PluginCall) {
+  @PluginMethod
+override fun checkPermissions(call: PluginCall) {
         val ctx = context
         val res = JSObject()
 
