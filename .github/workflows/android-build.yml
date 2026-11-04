@@ -13,15 +13,16 @@ jobs:
   build-apk:
     name: Gerar APK Nativo Android
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - name: Obter código-fonte
         uses: actions/checkout@v4
 
       - name: Configurar Java JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: '17'
 
       - name: Configurar Node.js 22
@@ -29,10 +30,18 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Confirmar versões do ambiente
+        run: |
+          node --version
+          java -version
+
       - name: Configurar Bun
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
+
+      - name: Confirmar versão do Bun
+        run: bun --version
 
       - name: Instalar dependências
         run: bun install --frozen-lockfile
@@ -40,18 +49,57 @@ jobs:
       - name: Compilar aplicação web
         run: bun run build
 
-      - name: Sincronizar Capacitor com Android
-        run: npx cap sync android
-
-      - name: Dar permissão de execução ao Gradle Wrapper
-        run: chmod +x android/gradlew
-
-      - name: Compilar APK Debug com Gradle
+      - name: Validar compilação web
         run: |
-          cd android
-          ./gradlew assembleDebug --stacktrace
+          test -d dist
+          test -f dist/index.html
+          ls -la dist
 
-      - name: Carregar APK como Artifact para Download
+      - name: Sincronizar Capacitor com Android
+        run: bunx cap sync android
+
+      - name: Configurar Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.14.3'
+
+      - name: Regenerar Gradle Wrapper válido
+        working-directory: android
+        run: |
+          rm -f gradle/wrapper/gradle-wrapper.jar
+          gradle wrapper --gradle-version 8.14.3
+          chmod +x gradlew
+
+      - name: Validar Gradle Wrapper
+        run: |
+          test -f android/gradlew
+          test -f android/gradlew.bat
+          test -f android/gradle/wrapper/gradle-wrapper.properties
+          test -f android/gradle/wrapper/gradle-wrapper.jar
+          jar tf android/gradle/wrapper/gradle-wrapper.jar | grep "org/gradle/wrapper/GradleWrapperMain.class"
+          ls -la android/gradle/wrapper
+          cd android
+          ./gradlew --version
+
+      - name: Validar AndroidManifest
+        run: |
+          test -f android/app/src/main/AndroidManifest.xml
+          python3 -c "import xml.etree.ElementTree as ET; ET.parse('android/app/src/main/AndroidManifest.xml'); print('AndroidManifest.xml válido')"
+
+      - name: Limpar compilação Android
+        working-directory: android
+        run: ./gradlew clean --stacktrace
+
+      - name: Compilar APK Debug
+        working-directory: android
+        run: ./gradlew assembleDebug --stacktrace --no-daemon
+
+      - name: Verificar APK gerado
+        run: |
+          test -f android/app/build/outputs/apk/debug/app-debug.apk
+          ls -lh android/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Carregar APK para download
         uses: actions/upload-artifact@v4
         with:
           name: StudyTrack-Android-APK
