@@ -3,7 +3,6 @@
 
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
@@ -26,8 +25,8 @@
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:statusBarColor">#142B4A</item>
         <item name="android:navigationBarColor">#0F1F35</item>
-        <item name="android:windowShowWhenLocked">true</item>
-        <item name="android:windowTurnScreenOn">true</item>
+        <item name="android:windowKeepScreenOn">true</item>
         <item name="android:windowBackground">@color/alarmBackground</item>
     </style>
+
 </resources>
