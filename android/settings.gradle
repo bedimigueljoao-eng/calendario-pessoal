@@ -5,6 +5,7 @@ pluginManagement {
         gradlePluginPortal()
     }
 }
+
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
     repositories {
@@ -14,4 +15,11 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = 'StudyTrack'
+
 include ':app'
+
+include ':capacitor-cordova-android-plugins'
+project(':capacitor-cordova-android-plugins').projectDir =
+        new File('./capacitor-cordova-android-plugins/')
+
+apply from: 'capacitor.settings.gradle'
