@@ -33,6 +33,7 @@
             android:textSize="13sp"
             android:textStyle="bold"
             android:letterSpacing="0.08" />
+
     </LinearLayout>
 
     <!-- Large Time Display -->
@@ -79,10 +80,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:text="O toque continuará ativo até selecionar uma das opções abaixo."
+            android:text="O toque continuará activo até seleccionar uma das opções abaixo."
             android:textColor="#FBBF24"
             android:textSize="12sp"
             android:textStyle="italic" />
+
     </LinearLayout>
 
     <!-- Middle spacer -->
@@ -95,8 +97,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gap="12dp">
+        android:orientation="vertical">
 
         <!-- Button 1: ESTUDAR -->
         <Button
@@ -114,14 +115,14 @@
             android:id="@+id/btnSnooze"
             android:layout_width="match_parent"
             android:layout_height="52dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="12dp"
             android:backgroundTint="@color/btnSnooze"
             android:text="⏱ ADIAR (10 MIN)"
             android:textColor="#FFFFFF"
             android:textSize="15sp"
             android:textStyle="bold" />
 
-        <!-- Quick Snooze Options Container (Expandable or Quick Chips) -->
+        <!-- Quick Snooze Options -->
         <LinearLayout
             android:id="@+id/layoutSnoozeChips"
             android:layout_width="match_parent"
@@ -172,6 +173,7 @@
                 android:text="30m"
                 android:textColor="#FBBF24"
                 android:textSize="12sp" />
+
         </LinearLayout>
 
         <!-- Button 3: NÃO ESTUDAR -->
@@ -180,10 +182,11 @@
             style="?attr/materialButtonOutlinedStyle"
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="12dp"
             android:text="✕ NÃO ESTUDAR"
             android:textColor="#F87171"
             android:textSize="14sp" />
+
     </LinearLayout>
 
     <View
