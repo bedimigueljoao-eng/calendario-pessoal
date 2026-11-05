@@ -40,16 +40,17 @@ export const Navigation: React.FC = () => {
     },
   ];
 
-  const handleTabChange = (tabId: ActiveTab) => {
-    setActiveTab(tabId);
-  };
-
   return (
     <>
-      {/* Indicador móvel do cronómetro activo */}
       {timerState &&
         timerState.status !== 'stopped' && (
-          <div className="fixed bottom-[calc(5.75rem+env(safe-area-inset-bottom))] left-4 right-4 z-40 sm:hidden">
+          <div
+            className="fixed left-4 right-4 z-40 sm:hidden"
+            style={{
+              bottom:
+                'calc(5.75rem + env(safe-area-inset-bottom, 0px))',
+            }}
+          >
             <button
               type="button"
               onClick={() =>
@@ -74,14 +75,60 @@ export const Navigation: React.FC = () => {
               </div>
 
               <span className="ml-2 flex-shrink-0 font-mono text-sm tracking-wider">
-                {formatMilliseconds(
-                  currentElapsedMs
-                )}
+                {formatMilliseconds(currentElapsedMs)}
               </span>
             </button>
           </div>
         )}
 
-      {/* Barra principal de navegação inferior */}
       <nav
-        className="fixed bottom-0 left-0 right-0 z-40 border-t border
+        className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 bg-white px-2 pt-1 shadow-lg"
+        style={{
+          paddingBottom:
+            'max(18px, env(safe-area-inset-bottom, 0px))',
+        }}
+        aria-label="Navegação principal"
+      >
+        <div className="mx-auto flex max-w-md items-center justify-around">
+          {tabs.map((tab) => {
+            const isActive =
+              activeTab === tab.id;
+
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() =>
+                  setActiveTab(tab.id)
+                }
+                className={`flex min-h-[58px] flex-1 flex-col items-center justify-center rounded-xl px-1 py-1.5 transition-all ${
+                  isActive
+                    ? 'scale-[1.03] font-bold text-blue-600'
+                    : 'font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-800'
+                }`}
+                aria-current={
+                  isActive ? 'page' : undefined
+                }
+                aria-label={tab.label}
+              >
+                <div
+                  className={`rounded-xl p-1.5 transition ${
+                    isActive
+                      ? 'bg-blue-50 text-blue-600'
+                      : 'text-gray-500'
+                  }`}
+                >
+                  {tab.icon}
+                </div>
+
+                <span className="mt-0.5 text-[11px] leading-tight tracking-tight">
+                  {tab.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+    </>
+  );
+};
